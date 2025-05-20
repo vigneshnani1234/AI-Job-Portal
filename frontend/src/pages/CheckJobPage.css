@@ -1,0 +1,150 @@
+.check-job-page-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  font-family: sans-serif;
+}
+
+.check-job-page-container h1 {
+  color: #333;
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.company-location {
+  text-align: center;
+  color: #555;
+  font-size: 0.9em;
+  margin-bottom: 20px;
+}
+
+.job-details-section,
+.resume-upload-section,
+.score-display-section {
+  background-color: #fff;
+  padding: 20px;
+  margin-bottom: 25px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.job-details-section h2,
+.resume-upload-section h2,
+.score-display-section h2 {
+  color: #444;
+  margin-top: 0;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.job-description-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 4px;
+  background-color: #fdfdfd;
+}
+
+.job-description-text {
+  white-space: pre-wrap; /* Preserves line breaks and spaces */
+  word-wrap: break-word; /* Breaks long words */
+  font-size: 0.95em;
+  line-height: 1.6;
+  color: #333;
+}
+
+.resume-instructions {
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.file-input {
+  display: block;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.file-name {
+  font-size: 0.85em;
+  color: #555;
+  margin-top: 5px;
+}
+
+/* General Button Styles */
+.button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: inline-block; /* For proper margin/padding */
+}
+
+.button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.back-button {
+  background-color: #6c757d; /* Grey */
+  margin-bottom: 20px;
+}
+.back-button:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+
+.get-score-button {
+  background-color: #007bff; /* Blue */
+  display: block; /* Make it full width within its container */
+  width: 100%;
+  max-width: 300px; /* Or a fixed width */
+  margin: 20px auto 0 auto; /* Center button */
+  font-size: 1.1em;
+}
+
+.get-score-button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.score-display-section {
+  text-align: center;
+}
+
+.score-value {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #28a745; /* Green for score */
+  margin-top: 5px;
+}
+
+.error-message {
+  color: #dc3545; /* Red for errors */
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.error-container {
+  text-align: center;
+  padding: 30px;
+}
+.error-container .button {
+  margin-top: 20px;
+}
+
+/* Loading indicator (optional, could be more sophisticated) */
+/* For now, the button text changes */

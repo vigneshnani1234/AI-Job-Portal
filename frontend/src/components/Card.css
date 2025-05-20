@@ -1,0 +1,67 @@
+.job-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 10px; /* Adjust margin for spacing between cards */
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  width: 300px; /* Fixed width, or use flex-basis for responsiveness */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Distributes space, pushes button to bottom */
+  min-height: 280px; /* Ensures cards have a consistent minimum height */
+}
+
+.job-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.job-card-title {
+  font-size: 1.3em;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 10px;
+  min-height: 2.6em; /* Approx 2 lines */
+  line-height: 1.3em;
+  overflow: hidden; /* In case title is too long */
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Limit to 2 lines */
+  -webkit-box-orient: vertical;
+}
+
+.job-card-company,
+.job-card-location,
+.job-card-posted {
+  font-size: 0.9em;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.job-card-description {
+  font-size: 0.95em;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 15px;
+  flex-grow: 1; /* Allows description to take available space */
+  overflow: hidden;
+}
+
+.job-card-apply-button {
+  display: inline-block;
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  text-align: center;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+  margin-top: auto; /* Ensures button is at the bottom of the card */
+}
+
+.job-card-apply-button:hover {
+  background-color: #0056b3;
+}
