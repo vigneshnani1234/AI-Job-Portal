@@ -38,10 +38,10 @@ def create_app(config_class=Config):
     init_user_login_services(app)
     init_auth_oauth_services(app)
 
-    sbert_model, sbert_loaded = load_bert_model(app.logger)
-    app.config['SBERT_MODEL'] = sbert_model
-    app.config['SBERT_MODEL_LOADED'] = sbert_loaded
-    app.logger.info(f"SBERT Model Loaded: {sbert_loaded}")
+    # sbert_model, sbert_loaded = load_bert_model(app.logger)
+    # app.config['SBERT_MODEL'] = sbert_model
+    # app.config['SBERT_MODEL_LOADED'] = sbert_loaded
+    # app.logger.info(f"SBERT Model Loaded: {sbert_loaded}")
     
     try:
         from .course_recommender.service import get_model_status as get_course_recommender_status # Relative import
