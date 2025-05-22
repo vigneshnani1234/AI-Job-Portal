@@ -17,34 +17,58 @@ from .pages.load_model import load_bert_model
 
 # This is the application factory
 def create_app(config_class=Config):
-    # app = Flask(__name__) # __name__ here will be 'flask_server' or 'flask_server.__init__'
-    app = Flask("flask_server") # Explicitly name it for clarity, or use __name__ from the calling module if preferred
+    app = Flask("flask_server")
     app.config.from_object(config_class)
 
-    # ... (rest of your create_app logic from the previous good example) ...
-    # Ensure all imports within create_app that refer to other modules in flask_server
-    # use relative imports like `from .user.models import User` if they were defined there.
-    # Example:
+    # Configure logging
     log_level = logging.DEBUG if app.debug or os.getenv('FLASK_ENV') == 'development' else logging.INFO
     if not app.logger.handlers:
         stream_handler = logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s %(module)s: %(message)s')
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s %(module)s [%(funcName)s]: %(message)s') # Added funcName
         stream_handler.setFormatter(formatter)
         app.logger.addHandler(stream_handler)
     app.logger.setLevel(log_level)
     
     config_class.validate_config(app.logger)
-    CORS(app, supports_credentials=True, origins=app.config.get('FRONTEND_URL', "*"))
+
+    # --- CORS Configuration ---
+    frontend_url_from_config = app.config.get('FRONTEND_URL')
+    app.logger.info(f"CORS: FRONTEND_URL from app.config is: '{frontend_url_from_config}'")
+
+    if frontend_url_from_config and frontend_url_from_config != 'http://localhost:5173' and frontend_url_from_config != "*":
+        # For production, be specific. The value from Render env var should be used.
+        cors_origins = frontend_url_from_config
+        app.logger.info(f"CORS: Using specific origin: {cors_origins}")
+    elif frontend_url_from_config == 'http://localhost:5173':
+        # Explicitly allow localhost for local dev if that's the default from config.py
+        cors_origins = 'http://localhost:5173'
+        app.logger.info(f"CORS: Allowing specific localhost origin for development: {cors_origins}")
+    else:
+        # Fallback to "*" if FRONTEND_URL is not set or is explicitly "*"
+        # This is less secure and should ideally not be hit in production if FRONTEND_URL is set.
+        cors_origins = "*"
+        app.logger.warning(f"CORS: FRONTEND_URL not specifically set or is '*', falling back to allowing all origins ('*'). This is not recommended for production.")
+
+    CORS(app, 
+         origins=cors_origins, 
+         supports_credentials=True,
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], # Be explicit
+         allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-CSRF-Token"], # Add common headers
+         expose_headers=["Content-Type", "Link"] # Add if your app uses these in responses
+    )
+    app.logger.info(f"Flask-CORS initialized with origins: '{cors_origins}', supports_credentials=True")
+    # --- End CORS Configuration ---
+
     init_user_login_services(app)
     init_auth_oauth_services(app)
 
-    # sbert_model, sbert_loaded = load_bert_model(app.logger)
-    # app.config['SBERT_MODEL'] = sbert_model
-    # app.config['SBERT_MODEL_LOADED'] = sbert_loaded
-    # app.logger.info(f"SBERT Model Loaded: {sbert_loaded}")
+    sbert_model, sbert_loaded = load_bert_model(app.logger) # Assuming load_model is correct
+    app.config['SBERT_MODEL'] = sbert_model
+    app.config['SBERT_MODEL_LOADED'] = sbert_loaded
+    app.logger.info(f"SBERT Model Loaded: {sbert_loaded}")
     
     try:
-        from .course_recommender.service import get_model_status as get_course_recommender_status # Relative import
+        from .course_recommender.service import get_model_status as get_course_recommender_status
         cr_status = get_course_recommender_status()
         app.logger.info(f"Course Recommender TF-IDF Model Status: {cr_status['status']} - {cr_status['message']}")
         if cr_status['status'] == "DOWN":
@@ -61,10 +85,23 @@ def create_app(config_class=Config):
     app.register_blueprint(ai_practice_bp)
     app.logger.info("All blueprints registered.")
 
-    @app.route('/') # This route defined in create_app will be part of the app
+    @app.route('/')
     def root_api_welcome():
-        # ... (same as before) ...
-        return jsonify({"message": "API Welcome from __init__ create_app"})
+        app.logger.debug(f"Root route / accessed by {request.remote_addr}")
+        sbert_status = "Loaded" if app.config.get('SBERT_MODEL_LOADED') else "Not Loaded"
+        course_status_msg = "Unknown"
+        try:
+            # Re-import locally in case of module loading order issues during startup logging
+            from .course_recommender.service import get_model_status as get_cr_status_dynamic 
+            course_status_msg = get_cr_status_dynamic().get("status", "Unknown")
+        except Exception:
+            pass # Avoid crashing welcome route if recommender service has issues
+        return jsonify({
+            "message": "API Welcome from __init__ create_app v2",
+            "sbert_model_status": sbert_status,
+            "course_recommender_status": course_status_msg,
+            "configured_frontend_url_for_cors": app.config.get('FRONTEND_URL') # Expose for debugging
+        })
 
     app.logger.info("Flask application created via __init__.create_app")
     return app
