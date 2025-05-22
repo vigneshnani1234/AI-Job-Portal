@@ -1,7 +1,7 @@
 // src/pages/WelcomePage.jsx (or Welcome.jsx)
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002';
 const Welcome = () => { // Using Welcome as per your component name
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);

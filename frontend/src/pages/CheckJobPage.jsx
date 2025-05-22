@@ -1,24 +1,23 @@
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import './CheckJobPage.css'; // Make sure this file exists and is styled properly
-import './Practice.css';
+import './CheckJobPage.css';
+import './Practice.css'; // Assuming this is for some shared button styles or similar
+
+// VVVVVV DEFINE API_BASE_URL USING THE ENVIRONMENT VARIABLE VVVVVV
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002'; // Fallback for local dev
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 const CheckJobPage = () => {
   const { jobId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // --- States for Match Scorer ---
   const [jobDetails, setJobDetails] = useState(null);
   const [resumeFileForScorer, setResumeFileForScorer] = useState(null);
   const [isLoadingScorer, setIsLoadingScorer] = useState(false);
   const [score, setScore] = useState(null);
   const [errorScorer, setErrorScorer] = useState('');
 
-  // --- States for Resume Generator ---
   const [resumeFileForGenerator, setResumeFileForGenerator] = useState(null);
   const [isLoadingGenerator, setIsLoadingGenerator] = useState(false);
   const [generatedResume, setGeneratedResume] = useState('');
@@ -28,27 +27,26 @@ const CheckJobPage = () => {
     if (location.state?.jobDetails) {
       setJobDetails(location.state.jobDetails);
     } else {
-      console.warn(`Job details not found in location state for ID: ${jobId}. Consider fetching.`);
-      setErrorScorer(`Job details for ID ${jobId} not found. Please navigate from a job listing.`);
-      setErrorGenerator(`Job details for ID ${jobId} not found. Cannot generate role-specific resume without job context.`);
+      console.warn(`Job details for ID ${jobId} not found in location state. This page might not function fully.`);
+      // Set errors more gently if page can still be partially useful or avoid breaking
+      const errorMessage = `Job details for ID ${jobId} not found. Please navigate from a job listing.`;
+      setErrorScorer(errorMessage);
+      setErrorGenerator(errorMessage + " Cannot generate resume without job context.");
     }
   }, [location.state, jobId]);
 
-  // --- Handlers for Match Scorer ---
   const handleFileChangeForScorer = (event) => {
     const file = event.target.files[0];
+    setResumeFileForScorer(file || null);
     if (file) {
-      setResumeFileForScorer(file);
       setErrorScorer('');
       setScore(null);
-    } else {
-      setResumeFileForScorer(null);
     }
   };
 
   const handleGetScore = async () => {
     if (!resumeFileForScorer) {
-      setErrorScorer("Please upload a resume file for scoring first.");
+      setErrorScorer("Please upload a resume file for scoring.");
       return;
     }
     if (!jobDetails?.description) {
@@ -65,18 +63,19 @@ const CheckJobPage = () => {
     formData.append('job_description_text', jobDetails.description);
 
     try {
-      const response = await fetch('http://localhost:5002/api/match_score', {
+      // VVVVVV USE THE API_BASE_URL VARIABLE VVVVVV
+      const response = await fetch(`${API_BASE_URL}/api/match_score`, {
+      // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         method: 'POST',
         body: formData,
+        // Note: 'Content-Type' for FormData is set automatically by the browser
       });
 
+      const responseData = await response.json(); // Try to get JSON regardless of ok status for error messages
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: response.statusText }));
-        throw new Error(errorData.error || `Server error: ${response.status}`);
+        throw new Error(responseData.error || `Server error: ${response.status} ${response.statusText}`);
       }
-
-      const data = await response.json();
-      setScore(data.match_score);
+      setScore(responseData.match_score);
     } catch (err) {
       console.error("Error getting score:", err);
       setErrorScorer(err.message || "Failed to get score from the server.");
@@ -85,25 +84,22 @@ const CheckJobPage = () => {
     }
   };
 
-  // --- Handlers for Resume Generator ---
   const handleFileChangeForGenerator = (event) => {
     const file = event.target.files[0];
+    setResumeFileForGenerator(file || null);
     if (file) {
-      setResumeFileForGenerator(file);
       setErrorGenerator('');
       setGeneratedResume('');
-    } else {
-      setResumeFileForGenerator(null);
     }
   };
 
   const handleGenerateResume = async () => {
     if (!resumeFileForGenerator) {
-      setErrorGenerator("Please upload your base resume file first.");
+      setErrorGenerator("Please upload your base resume file.");
       return;
     }
     if (!jobDetails?.description && !jobDetails?.title) {
-      setErrorGenerator("Job details (title or description) are missing. Cannot tailor resume.");
+      setErrorGenerator("Job details (title or description) are missing.");
       return;
     }
 
@@ -117,18 +113,18 @@ const CheckJobPage = () => {
     if (jobDetails?.description) formData.append('target_job_description', jobDetails.description);
 
     try {
-      const response = await fetch('http://localhost:5002/api/generate_resume', {
+      // VVVVVV USE THE API_BASE_URL VARIABLE VVVVVV
+      const response = await fetch(`${API_BASE_URL}/api/generate_resume`, {
+      // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         method: 'POST',
         body: formData,
       });
 
+      const responseData = await response.json();
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: response.statusText }));
-        throw new Error(errorData.error || `Server error: ${response.status}`);
+        throw new Error(responseData.error || `Server error: ${response.status} ${response.statusText}`);
       }
-
-      const data = await response.json();
-      setGeneratedResume(data.generated_resume_text);
+      setGeneratedResume(responseData.generated_resume_text);
     } catch (err) {
       console.error("Error generating resume:", err);
       setErrorGenerator(err.message || "Failed to generate resume from the server.");
@@ -137,41 +133,37 @@ const CheckJobPage = () => {
     }
   };
 
-  // --- Handler for Navigating to Course Prediction ---
   const handleNavigateToCoursePredict = () => {
     if (jobDetails) {
       navigate('/course_predict', { state: { jobDetails: jobDetails } });
     } else {
-      // This case should ideally be prevented by disabling the button
-      console.error("Job details not available to navigate to course prediction.");
       alert("Job details are not loaded. Cannot find related courses.");
     }
   };
 
-
-  // --- Conditional Rendering ---
-  if (!jobDetails && !errorScorer && !errorGenerator) {
-    return <div className="check-job-page-container"><p>Loading job details...</p></div>;
+  if (!jobDetails && (errorScorer || errorGenerator)) {
+     // If jobDetails failed to load from state, this is a more critical issue
+     const criticalError = errorScorer || errorGenerator;
+     return (
+       <div className="check-job-page-container error-container">
+         <p className="error-message">{criticalError}</p>
+         <button onClick={() => navigate('/')} className="button">Go to Job Listings</button>
+       </div>
+     );
   }
-
-  if ((errorScorer && !jobDetails) || (errorGenerator && !jobDetails)) {
-    const commonError = errorScorer || errorGenerator;
-    return (
-      <div className="check-job-page-container error-container">
-        <p className="error-message">{commonError}</p>
-        <button onClick={() => navigate('/')} className="button">Go to Job Listings</button>
-      </div>
-    );
+  
+  if (!jobDetails && !errorScorer && !errorGenerator) {
+    return <div className="check-job-page-container"><p>Loading job details or select a job...</p></div>;
   }
 
   return (
-    <div >
-      {/* --- TOP NAVIGATION BUTTONS --- */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
+    <div className="check-job-page-wrapper"> {/* Added a wrapper for better structure */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', padding: '0 10px' }}>
         <button
           onClick={handleNavigateToCoursePredict}
-          className="button practice-nav-button"          disabled={!jobDetails}
-          style={{ marginRight: '10px', marginBottom: '10px' }} // Added margin for spacing
+          className="button course-predict-nav-button" // Use specific class if different style
+          disabled={!jobDetails}
+          style={{ marginRight: '10px', marginBottom: '10px' }}
         >
           Get Related Courses
         </button>
@@ -179,22 +171,22 @@ const CheckJobPage = () => {
           onClick={() => navigate('/practice', { state: { jobDetails: jobDetails } })}
           className="button practice-nav-button"
           disabled={!jobDetails}
-          style={{ marginBottom: '10px' }} // Added margin for spacing
+          style={{ marginBottom: '10px' }}
         >
           Practice Interview for this Job →
         </button>
       </div>
 
-      <div className="page-wrapper">
+      <div className="page-content-flex"> {/* For side-by-side layout if desired */}
         {/* Resume Match Scorer Section */}
-        <div className="check-job-page-container feature-section">
+        <div className="feature-section resume-scorer-section"> {/* More specific class */}
           <div className="feature-header">
             <button onClick={() => navigate(-1)} className="button back-button">← Back</button>
             <h2>Resume Match Scorer</h2>
           </div>
 
           {jobDetails && (
-            <div className="job-details-section">
+            <div className="job-details-summary-section"> {/* Renamed for clarity */}
               <h3>Job: {jobDetails.title || 'N/A'}</h3>
               <p className="company-location">
                 {jobDetails.company?.display_name && <span>{jobDetails.company.display_name}</span>}
@@ -210,22 +202,12 @@ const CheckJobPage = () => {
 
           <div className="resume-upload-section">
             <h4>Upload Resume for Scoring</h4>
-            <p className="resume-instructions">Upload your resume file to see how well it matches this job.</p>
-            <input
-              type="file"
-              onChange={handleFileChangeForScorer}
-              className="file-input"
-              disabled={isLoadingScorer}
-            />
+            <input type="file" onChange={handleFileChangeForScorer} className="file-input" disabled={isLoadingScorer} />
             {resumeFileForScorer && <p className="file-name">Selected: {resumeFileForScorer.name}</p>}
           </div>
 
-          <button
-            onClick={handleGetScore}
-            disabled={isLoadingScorer || !resumeFileForScorer || !jobDetails}
-            className="button get-score-button"
-          >
-            {isLoadingScorer ? 'Calculating Score...' : 'Get Score'}
+          <button onClick={handleGetScore} disabled={isLoadingScorer || !resumeFileForScorer || !jobDetails} className="button get-score-button">
+            {isLoadingScorer ? 'Calculating...' : 'Get Score'}
           </button>
 
           {score !== null && (
@@ -234,38 +216,24 @@ const CheckJobPage = () => {
               <p className="score-value">{score.toFixed(2)}%</p>
             </div>
           )}
-
           {errorScorer && !score && <p className="error-message">{errorScorer}</p>}
         </div>
 
         {/* Role-Specific Resume Generator Section */}
-        <div className="check-job-page-container feature-section">
+        <div className="feature-section resume-generator-section"> {/* More specific class */}
           <div className="feature-header">
             <h2>Role-Specific Resume Generator</h2>
           </div>
-
-          <p>Tailor your resume for the job: <strong>{jobDetails?.title || "Selected Job"}</strong></p>
+          {jobDetails && <p>Tailor your resume for: <strong>{jobDetails.title || "Selected Job"}</strong></p>}
 
           <div className="resume-upload-section">
             <h4>Upload Your Base Resume</h4>
-            <p className="resume-instructions">
-              Provide your current resume. The AI will attempt to modify it to better fit the job details above.
-            </p>
-            <input
-              type="file"
-              onChange={handleFileChangeForGenerator}
-              className="file-input"
-              disabled={isLoadingGenerator}
-            />
+            <input type="file" onChange={handleFileChangeForGenerator} className="file-input" disabled={isLoadingGenerator}/>
             {resumeFileForGenerator && <p className="file-name">Selected: {resumeFileForGenerator.name}</p>}
           </div>
 
-          <button
-            onClick={handleGenerateResume}
-            disabled={isLoadingGenerator || !resumeFileForGenerator || !jobDetails}
-            className="button practice-nav-button"
-          >
-            {isLoadingGenerator ? 'Generating Resume...' : 'Generate Tailored Resume'}
+          <button onClick={handleGenerateResume} disabled={isLoadingGenerator || !resumeFileForGenerator || !jobDetails} className="button generate-resume-button"> {/* Specific class */}
+            {isLoadingGenerator ? 'Generating...' : 'Generate Tailored Resume'}
           </button>
 
           {generatedResume && (
@@ -274,7 +242,6 @@ const CheckJobPage = () => {
               <pre className="generated-resume-text">{generatedResume}</pre>
             </div>
           )}
-
           {errorGenerator && !generatedResume && <p className="error-message">{errorGenerator}</p>}
         </div>
       </div>
