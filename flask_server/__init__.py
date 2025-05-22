@@ -1,7 +1,7 @@
 # flask_server/__init__.py
 import os
 import logging
-from flask import Flask, jsonify
+from flask import Flask, jsonify,request
 from flask_cors import CORS
 
 # Use relative imports because these files are part of the 'flask_server' package
