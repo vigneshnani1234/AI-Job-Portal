@@ -50,13 +50,13 @@ def create_app(config_class=Config):
         app.logger.warning(f"CORS: FRONTEND_URL not specifically set or is '*', falling back to allowing all origins ('*'). This is not recommended for production.")
 
     CORS(app, 
-         origins=cors_origins, 
+         origins="*", 
          supports_credentials=True,
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], # Be explicit
          allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-CSRF-Token"], # Add common headers
          expose_headers=["Content-Type", "Link"] # Add if your app uses these in responses
     )
-    app.logger.info(f"Flask-CORS initialized with origins: '{cors_origins}', supports_credentials=True")
+    app.logger.info(f"Flask-CORS initialized with origins:, supports_credentials=True")
     # --- End CORS Configuration ---
 
     init_user_login_services(app)
