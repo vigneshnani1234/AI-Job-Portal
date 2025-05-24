@@ -161,7 +161,7 @@ const CheckJobPage = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', padding: '0 10px' }}>
         <button
           onClick={handleNavigateToCoursePredict}
-          className="button course-predict-nav-button" // Use specific class if different style
+          // className="button course-predict-nav-button" // Use specific class if different style
           disabled={!jobDetails}
           style={{ marginRight: '10px', marginBottom: '10px' }}
         >
@@ -169,7 +169,7 @@ const CheckJobPage = () => {
         </button>
         <button
           onClick={() => navigate('/practice', { state: { jobDetails: jobDetails } })}
-          className="button practice-nav-button"
+          // className="button practice-nav-button"
           disabled={!jobDetails}
           style={{ marginBottom: '10px' }}
         >

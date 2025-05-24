@@ -108,7 +108,7 @@ const Course = () => {
       <button
         onClick={handleGetPredictions}
         disabled={isLoading || !jobDetails}
-        className="button get-predictions-button" // Added class back
+        // className="button get-predictions-button" // Added class back
         style={{ display: 'block', margin: '0 auto 20px auto', padding: '12px 25px', fontSize: '16px' }}
       >
         {isLoading ? 'Fetching Courses...' : 'Get Course Recommendations'}
